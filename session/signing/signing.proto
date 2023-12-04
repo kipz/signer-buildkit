@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package moby.buildkit.v1.signing;
+
+option go_package = "signing";
+
+service SignerVerifier {
+	rpc SignAttetation(SigningRequest) returns (SigningResponse);
+}
+
+message SigningRequest {
+	bytes statement = 1;
+}
+
+message SigningResponse {
+	bytes envelope = 1;
+}
