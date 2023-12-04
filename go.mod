@@ -1,6 +1,8 @@
 module github.com/moby/buildkit
 
-go 1.20
+go 1.21.1
+
+toolchain go1.21.4
 
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.1.0
@@ -42,7 +44,7 @@ require (
 	github.com/hashicorp/go-immutable-radix v1.3.1
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/golang-lru v0.5.4
-	github.com/in-toto/in-toto-golang v0.5.0
+	//	github.com/in-toto/in-toto-golang v0.9.0
 	github.com/klauspost/compress v1.17.2
 	github.com/mitchellh/hashstructure/v2 v2.0.2
 	github.com/moby/locker v1.0.1
@@ -150,7 +152,7 @@ require (
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.42.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	github.com/secure-systems-lab/go-securesystemslib v0.4.0 // indirect
+	github.com/secure-systems-lab/go-securesystemslib v0.7.0
 	github.com/shibumi/go-pathspec v1.3.0 // indirect
 	github.com/vbatts/tar-split v0.11.3 // indirect
 	go.opencensus.io v0.24.0 // indirect
@@ -164,3 +166,29 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	kernel.org/pub/linux/libs/security/libcap/psx v1.2.67 // indirect
 )
+
+require github.com/in-toto/in-toto-golang v0.9.0
+
+require (
+	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect
+	github.com/goccy/go-json v0.10.2 // indirect
+	github.com/gorilla/schema v1.2.0 // indirect
+	github.com/gorilla/securecookie v1.1.1 // indirect
+	github.com/kr/pretty v0.3.1 // indirect
+	github.com/lestrrat-go/blackmagic v1.0.1 // indirect
+	github.com/lestrrat-go/httpcc v1.0.1 // indirect
+	github.com/lestrrat-go/httprc v1.0.4 // indirect
+	github.com/lestrrat-go/iter v1.0.2 // indirect
+	github.com/lestrrat-go/jwx/v2 v2.0.11 // indirect
+	github.com/lestrrat-go/option v1.0.1 // indirect
+	github.com/muhlemmer/gu v0.3.1 // indirect
+	github.com/openpubkey/openpubkey v0.0.0-20231020163231-dfa56788d756 // indirect
+	github.com/openpubkey/signed-attestation v0.0.0-20231024121752-f64048341ecd // indirect
+	github.com/segmentio/asm v1.2.0 // indirect
+	github.com/zitadel/oidc/v2 v2.6.1 // indirect
+	golang.org/x/oauth2 v0.10.0 // indirect
+	google.golang.org/appengine v1.6.7 // indirect
+	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
+)
+
+replace github.com/openpubkey/signed-attestation => /home/kipz/scm/opk-signed-attestation

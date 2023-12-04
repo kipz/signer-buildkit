@@ -15,6 +15,7 @@ import (
 	"github.com/containerd/containerd/labels"
 	"github.com/containerd/containerd/platforms"
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
+
 	"github.com/moby/buildkit/cache"
 	cacheconfig "github.com/moby/buildkit/cache/config"
 	"github.com/moby/buildkit/exporter"
@@ -22,6 +23,7 @@ import (
 	"github.com/moby/buildkit/exporter/containerimage/exptypes"
 	"github.com/moby/buildkit/exporter/util/epoch"
 	"github.com/moby/buildkit/session"
+	"github.com/moby/buildkit/session/signing"
 	"github.com/moby/buildkit/snapshot"
 	"github.com/moby/buildkit/solver"
 	"github.com/moby/buildkit/solver/result"
@@ -59,7 +61,7 @@ type ImageWriter struct {
 	opt WriterOpt
 }
 
-func (ic *ImageWriter) Commit(ctx context.Context, inp *exporter.Source, sessionID string, opts *ImageCommitOpts) (*ocispecs.Descriptor, error) {
+func (ic *ImageWriter) Commit(ctx context.Context, inp *exporter.Source, sm *session.Manager, sessionID string, opts *ImageCommitOpts) (*ocispecs.Descriptor, error) {
 	if _, ok := inp.Metadata[exptypes.ExporterPlatformsKey]; len(inp.Refs) > 0 && !ok {
 		return nil, errors.Errorf("unable to export multiple refs, missing platforms mapping")
 	}
@@ -267,7 +269,7 @@ func (ic *ImageWriter) Commit(ctx context.Context, inp *exporter.Source, session
 				return nil, err
 			}
 
-			desc, err := ic.commitAttestationsManifest(ctx, opts, p, desc.Digest.String(), stmts)
+			desc, err := ic.commitAttestationsManifest(ctx, opts, p, desc.Digest.String(), stmts, sm, sessionID)
 			if err != nil {
 				return nil, err
 			}
@@ -482,7 +484,7 @@ func (ic *ImageWriter) commitDistributionManifest(ctx context.Context, opts *Ima
 	}, &configDesc, nil
 }
 
-func (ic *ImageWriter) commitAttestationsManifest(ctx context.Context, opts *ImageCommitOpts, p exptypes.Platform, target string, statements []intoto.Statement) (*ocispecs.Descriptor, error) {
+func (ic *ImageWriter) commitAttestationsManifest(ctx context.Context, opts *ImageCommitOpts, p exptypes.Platform, target string, statements []intoto.Statement, sm *session.Manager, sessionID string) (*ocispecs.Descriptor, error) {
 	var (
 		manifestType = ocispecs.MediaTypeImageManifest
 		configType   = ocispecs.MediaTypeImageConfig
@@ -495,14 +497,23 @@ func (ic *ImageWriter) commitAttestationsManifest(ctx context.Context, opts *Ima
 	layers := make([]ocispecs.Descriptor, len(statements))
 	for i, statement := range statements {
 		i, statement := i, statement
-
-		data, err := json.Marshal(statement)
+		mediaType, err := dsseMediaType(statement.PredicateType)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to marshal attestation")
+			return nil, errors.Wrap(err, "failed to get DSSE media type")
 		}
+		done := progress.OneOff(ctx, "signing attestation "+statement.PredicateType)
+		env, err := signing.SignAttestation(ctx, statement, sm, sessionID)
+		if err != nil {
+			return nil, done(errors.Wrap(err, "failed to sign attestation"))
+		}
+		data, err := json.Marshal(env)
+		if err != nil {
+			return nil, done(errors.Wrap(err, "failed to marshal attestation"))
+		}
+		done(nil)
 		digest := digest.FromBytes(data)
 		desc := ocispecs.Descriptor{
-			MediaType: intoto.PayloadType,
+			MediaType: mediaType,
 			Digest:    digest,
 			Size:      int64(len(data)),
 			Annotations: map[string]string{

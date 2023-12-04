@@ -19,6 +19,7 @@ import (
 	"github.com/moby/buildkit/identity"
 	"github.com/moby/buildkit/session"
 	"github.com/moby/buildkit/session/auth/authprovider"
+	"github.com/moby/buildkit/session/signing/signingprovider"
 	"github.com/moby/buildkit/session/sshforward/sshprovider"
 	"github.com/moby/buildkit/solver/pb"
 	spb "github.com/moby/buildkit/sourcepolicy/pb"
@@ -187,6 +188,13 @@ func buildAction(clicontext *cli.Context) error {
 		}
 		attachable = append(attachable, secretProvider)
 	}
+
+	// TODO (kipz): start only if configured
+	signingProvider := signingprovider.NewSigningProvider()
+	if err != nil {
+		return err
+	}
+	attachable = append(attachable, signingProvider)
 
 	allowed, err := build.ParseAllow(clicontext.StringSlice("allow"))
 	if err != nil {

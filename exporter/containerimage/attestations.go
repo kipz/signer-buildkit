@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
+	v02 "github.com/in-toto/in-toto-golang/in_toto/slsa_provenance/v0.2"
 	"github.com/moby/buildkit/cache"
 	"github.com/moby/buildkit/exporter"
 	"github.com/moby/buildkit/exporter/attestation"
@@ -217,4 +218,18 @@ func (c *fileLayerFinder) find(ctx context.Context, s session.Group, filename st
 		}
 	}
 	return nil, nil, fs.ErrNotExist
+}
+
+func dsseMediaType(predicateType string) (string, error) {
+	var predicateName string
+	switch predicateType {
+	case v02.PredicateSLSAProvenance:
+		predicateName = "provenance"
+	case intoto.PredicateSPDX:
+		predicateName = "spdx"
+	default:
+		return "", fmt.Errorf("unknown predicate type %q", predicateType)
+	}
+
+	return fmt.Sprintf("application/vnd.in-toto.%s+dsse", predicateName), nil
 }
